@@ -1,0 +1,58 @@
+def calc_MSE(conf_m):
+    max_SSE = 0
+    min_SSE = 0
+    score_step_by_class = (100/conf_m.shape[0])
+    max_possible_err_inside_class = score_step_by_class - 1
+    n = sum(sum(conf_m))
+    
+    for i in range(conf_m.shape[0]):
+        for j in range(conf_m.shape[0]):
+            if i != j and conf_m[i,j] > 0:
+                min_SSE += (1 + abs(i - j - 1)*score_step_by_class)**2
+                max_SSE += (max_possible_err_inside_class + abs(score_step_by_class*(i-j)))**2
+            elif i == j:
+                max_SSE = max_SSE + max_possible_err_inside_class**2
+    
+    max_mse = (1/n)*max_SSE
+    min_mse = (1/n)*min_SSE
+    print("max_mse is "+str(max_mse))
+    print("min_mse is "+str(min_mse))
+
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB, MultinomialNB
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+from sklearn.metrics import confusion_matrix, accuracy_score
+one_enc = OneHotEncoder(handle_unknown='ignore')
+label_enc = LabelEncoder()
+
+data = pd.read_csv("StudentsPerformance.csv")
+data['gender'] = label_enc.fit_transform(data['gender'].astype('category'))
+#data['gender'] = one_enc.fit_transform(np.array(data['gender']).reshape(-1,1))
+data['race/ethnicity'] = label_enc.fit_transform(data['race/ethnicity'].astype('category'))
+#data['race/ethnicity'] = one_enc.fit_transform(np.array(data['race/ethnicity']).reshape(-1,1))
+data['parental level of education'] = label_enc.fit_transform(data['parental level of education'].astype('category'))
+#data['parental level of education'] = one_enc.fit_transform(np.array(data['parental level of education']).reshape(-1,1))
+data['lunch'] = label_enc.fit_transform(data['lunch'].astype('category'))
+#data['lunch'] = one_enc.fit_transform(np.array(data['lunch']).reshape(-1,1))
+data['test preparation course'] = label_enc.fit_transform(data['test preparation course'].astype('category'))
+#data['test preparation course'] = one_enc.fit_transform(np.array(data['test preparation course']).reshape(-1,1))
+
+# Split test scores into categories of 5.
+
+data['score_grp_5'] = pd.cut(data['math score'],bins=20,include_lowest=True)
+data['score_grp_5'] = label_enc.fit_transform(data['score_grp_5'].astype('category'))
+train, test = train_test_split(data, test_size = 0.2, random_state = 123)
+
+print(data.head())
+
+nb_model = MultinomialNB()
+test_preds = nb_model.fit(train.iloc[:,0:5],train['math score']).predict(test.iloc[:,0:5])
+conf_m = confusion_matrix(test['math score'], test_preds)
+print(sum(sum(conf_m)))
+print(accuracy_score(test['math score'], test_preds))
+calc_MSE(conf_m)
+
+
+
