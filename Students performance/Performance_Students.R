@@ -1,5 +1,6 @@
+
+# Calculates the maximum and minimum MSE obtained through the Naive Bayes category classifier. 
 calc_max_MSE = function(conf_m) {
-  # For each that 
   max_SSE = 0
   min_SSE = 0
   score_step_by_class = (100/nrow(conf_m))
@@ -186,6 +187,7 @@ pred_test = predict(write_score_model, test)
 MSE(y=test$writing.score, y_hat = pred_test)
 
 cov(data$math.score, data$writing.score)
+
 ####### Heuristic analysis ######
 table(data$gender)
 
